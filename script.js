@@ -4,6 +4,30 @@
   .then(data => {
     const productGrid = document.getElementById('product-grid');
 
+    const cartContainer = document.querySelector('.cart');
+    const cartItems = [];
+
+    // Display cart items
+    function displayCartItems() {
+        cartContainer.innerHTML = `
+        <p>Your Cart</> 
+        ${cartItems.length === 0 ? '<img src="./images/illustration-empty-cart.svg" alt="empty"><p>Your added items will appear here</p>'
+            : cartItems.map(item => `
+                <div class="cart-item">
+                <p>${item.name}</p>
+                <p>$${item.price.toFixed(2)}</p>
+              </div>
+                `).join('')
+        }
+        `;
+    }
+
+    // To add products to cart
+    function addCart (product) {
+        cartItems.push(product);
+        displayCartItems();
+    }
+
     data.forEach(product => {
         // create item container
         const productItem = document.createElement('div');
@@ -36,8 +60,16 @@
         productPrice.textContent = `$${product.price.toFixed(2)}`;
         productItem.appendChild(productPrice);
 
+        // add to cart button
+        const addToCartButton = document.createElement('button');
+        addToCartButton.classList.add('add-to-cart');
+        addToCartButton.textContent = 'Add to Cart';
+        addToCartButton.addEventListener('click', () => addCart(product));
+        productItem.appendChild(addToCartButton);
+
         // append product-item to product grid
         productGrid.appendChild(productItem);
+
     });
   })
   .catch( error = console.error('Error fetching products', error));
