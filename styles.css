@@ -32,6 +32,7 @@ body {
 
 .container {
     display: flex;
+    justify-content: space-between;
 }
 
 .product-grid {
@@ -46,6 +47,54 @@ body {
     object-fit: cover;
 }
 
+.cart {
+    border-radius: 8px;
+    text-align: center;
+}
+
+
+
+/* Add to Cart button styles */
+.add-to-cart-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  /* Quantity wrapper flex styling */
+  .quantity-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Space between controls */
+  }
+  
+  .quantity-wrapper button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .quantity-display {
+    font-weight: bold;
+  }
+  
+  /* Style increment/decrement buttons */
+  .quantity-controls button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .quantity-controls img {
+    width: 20px;
+    height: 20px;
+  }
+  
 
 @media (max-width: 600px) {
     .product-grid {
