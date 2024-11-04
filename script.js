@@ -2,29 +2,95 @@ fetch("data.json")
   .then((response) => response.json())
   .then((data) => {
     const productGrid = document.getElementById("product-grid");
-
     const cartContainer = document.querySelector(".cart");
-    const cartItems = {};
+    const modalContainer = document.createElement("div"); // Create modal container
+    modalContainer.classList.add("modal");
+    document.body.appendChild(modalContainer); // Append to body
+    let cartItems = {}; // Object to store cart items with quantity
 
-    // Display cart items
+    // Function to display cart items
     function displayCartItems() {
       cartContainer.innerHTML = `
-        <p>Your Cart</> 
+        <p>Your Cart</p>
         ${
           Object.keys(cartItems).length === 0
             ? '<img src="./images/illustration-empty-cart.svg" alt="empty"><p>Your added items will appear here</p>'
             : Object.values(cartItems)
                 .map(
                   (item) => `
-                <div class="cart-item">
+              <div class="cart-item">
+                <p>${item.name}</p>
                 <p>Quantity: ${item.quantity}</p>
                 <p>Total: $${(item.price * item.quantity).toFixed(2)}</p>
               </div>
-                `
+            `
                 )
                 .join("")
         }
-        `;
+      `;
+
+      // Check if there are items in the cart and add a Confirm Order button
+      if (Object.keys(cartItems).length > 0) {
+        const confirmOrderButton = document.createElement("button");
+        confirmOrderButton.classList.add("confirm-order");
+        confirmOrderButton.textContent = "Confirm Order";
+
+        // Add event listener for confirming order
+        confirmOrderButton.addEventListener("click", () => {
+          displayModal(); // Show the modal
+        });
+
+        // Append Confirm Order button to cart container
+        cartContainer.appendChild(confirmOrderButton);
+      }
+    }
+
+    // Display Modal on Confirm Order Click
+    function displayModal() {
+      modalContainer.innerHTML = `
+        <div class="modal-content">
+          <h2>Order Confirmed</h2>
+          <p>Thank you for your purchase! Here is your order:</p>
+          <ul>
+            ${Object.values(cartItems)
+              .map(
+                (item) => `
+              <li>${item.name} - Quantity: ${item.quantity} - Total: $${(
+                  item.price * item.quantity
+                ).toFixed(2)}</li>
+            `
+              )
+              .join("")}
+          </ul>
+          <button id="newOrderButton">Start New Order</button>
+        </div>
+      `;
+      modalContainer.style.display = "flex"; // Show modal (display flex for centering)
+
+      // Handle Start New Order button click
+      document
+        .getElementById("newOrderButton")
+        .addEventListener("click", () => {
+          cartItems = {}; // Clear cart items
+          modalContainer.style.display = "none"; // Hide modal
+          displayCartItems(); // Refresh cart display
+          resetProductGrid(); // Reset the product grid UI
+        });
+    }
+
+    // Reset product grid to show "Add to Cart" buttons and remove quantity controls
+    function resetProductGrid() {
+      document.querySelectorAll(".product-item").forEach((item) => {
+        // Show "Add to Cart" button
+        const addToCartButton = item.querySelector(".add-to-cart");
+        addToCartButton.style.display = "block";
+
+        // Remove quantity controls
+        const quantityControls = item.querySelector(".quantity-controls");
+        if (quantityControls) {
+          quantityControls.remove();
+        }
+      });
     }
 
     // Function to update the quantity of a product in the cart
@@ -35,7 +101,9 @@ fetch("data.json")
         item.quantity += 1;
       } else {
         item.quantity -= 1;
-        if (item.quantity === 0) delete cartItems[productId];
+        if (item.quantity === 0) {
+          delete cartItems[productId];
+        }
       }
       displayCartItems();
     }
@@ -47,12 +115,13 @@ fetch("data.json")
         displayCartItems();
       }
     }
+
+    // Create product elements for each item
     data.forEach((product) => {
-      // create item container
+      // Product container
       const productItem = document.createElement("div");
       productItem.classList.add("product-item");
 
-      // Get appropriate image sizes
       const imageUrl =
         window.innerWidth >= 1024
           ? product.image.desktop
@@ -60,48 +129,46 @@ fetch("data.json")
           ? product.image.tablet
           : product.image.mobile;
 
-      // Add product Image
+      // Product image
       const productImage = document.createElement("img");
       productImage.src = imageUrl;
       productImage.alt = product.name;
       productItem.appendChild(productImage);
 
-      // Add prodduct name
+      // Product name
       const productName = document.createElement("h2");
       productName.classList.add("product-name");
       productName.textContent = product.name;
       productItem.appendChild(productName);
 
-      // Add product Category
+      // Product category
       const productCategory = document.createElement("p");
       productCategory.classList.add("product-category");
       productCategory.textContent = product.category;
       productItem.appendChild(productCategory);
 
-      // Add product price
+      // Product price
       const productPrice = document.createElement("p");
       productPrice.classList.add("product-price");
       productPrice.textContent = `$${product.price.toFixed(2)}`;
       productItem.appendChild(productPrice);
 
-      // add to cart button
+      // Add to Cart button and quantity controls
       const addToCartButton = document.createElement("button");
       addToCartButton.classList.add("add-to-cart");
       addToCartButton.textContent = "Add to Cart";
-      addToCartButton.addEventListener("click", () => addCart(product));
       productItem.appendChild(addToCartButton);
 
+      // Add event listener for adding product to cart
       addToCartButton.addEventListener("click", () => {
         if (!cartItems[product.name]) {
           addToCart(product);
-      
-          // Clear and reset the button content for the quantity controls
-          addToCartButton.innerHTML = ""; 
-      
-          // Create a wrapper to hold quantity and control buttons
-          const quantityWrapper = document.createElement("div");
-          quantityWrapper.classList.add("quantity-wrapper");
-      
+          addToCartButton.style.display = "none"; // Hide the button
+
+          // Create quantity controls
+          const quantityControls = document.createElement("div");
+          quantityControls.classList.add("quantity-controls");
+
           // Decrement button with icon
           const decrementButton = document.createElement("button");
           const decrementIcon = document.createElement("img");
@@ -109,21 +176,22 @@ fetch("data.json")
           decrementIcon.alt = "Decrement quantity";
           decrementButton.appendChild(decrementIcon);
           decrementButton.addEventListener("click", () => {
-            if (cartItems[product.name].quantity > 1) {
-              updateCartItem(product.name, false);
-              quantityDisplay.textContent = cartItems[product.name].quantity;
+            updateCartItem(product.name, false);
+            const currentQuantity = cartItems[product.name]?.quantity;
+            if (currentQuantity) {
+              quantityDisplay.textContent = currentQuantity;
             } else {
-              updateCartItem(product.name, false);
+              addToCartButton.style.display = "block";
               addToCartButton.textContent = "Add to Cart";
-              quantityWrapper.remove();
+              quantityControls.remove();
             }
           });
-      
+
           // Quantity display
           const quantityDisplay = document.createElement("span");
           quantityDisplay.classList.add("quantity-display");
           quantityDisplay.textContent = cartItems[product.name].quantity;
-      
+
           // Increment button with icon
           const incrementButton = document.createElement("button");
           const incrementIcon = document.createElement("img");
@@ -134,21 +202,18 @@ fetch("data.json")
             updateCartItem(product.name, true);
             quantityDisplay.textContent = cartItems[product.name].quantity;
           });
-      
-          // Append controls and quantity display to the wrapper
-          quantityWrapper.appendChild(decrementButton);
-          quantityWrapper.appendChild(quantityDisplay);
-          quantityWrapper.appendChild(incrementButton);
-      
-          // Append wrapper to addToCartButton
-          addToCartButton.appendChild(quantityWrapper);
+
+          quantityControls.appendChild(decrementButton);
+          quantityControls.appendChild(quantityDisplay);
+          quantityControls.appendChild(incrementButton);
+          productItem.appendChild(quantityControls);
         }
       });
-      
 
-      // append product-item to product grid
+      // Append product item to the grid
       productGrid.appendChild(productItem);
     });
-    displayCartItems();
+
+    displayCartItems(); // Initialize empty cart display
   })
-  .catch((error = console.error("Error fetching products", error)));
+  .catch((error) => console.error("Error fetching products", error));
