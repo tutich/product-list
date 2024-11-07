@@ -135,17 +135,18 @@ fetch("data.json")
       productImage.alt = product.name;
       productItem.appendChild(productImage);
 
+      // Product category
+      const productCategory = document.createElement("p");
+      productCategory.classList.add("product-category");
+      productCategory.textContent = product.category;
+      productItem.appendChild(productCategory);
+
       // Product name
       const productName = document.createElement("h2");
       productName.classList.add("product-name");
       productName.textContent = product.name;
       productItem.appendChild(productName);
 
-      // Product category
-      const productCategory = document.createElement("p");
-      productCategory.classList.add("product-category");
-      productCategory.textContent = product.category;
-      productItem.appendChild(productCategory);
 
       // Product price
       const productPrice = document.createElement("p");
